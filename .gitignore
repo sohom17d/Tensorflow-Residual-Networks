@@ -1,2 +1,5 @@
 env/
 .vscode/
+.ipynb_checkpoints/
+models/__pycache__/
+Test_Notebook.ipynb
