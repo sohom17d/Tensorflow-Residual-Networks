@@ -18,6 +18,7 @@ class Resnet18:
         """
         self.input_shape = input_shape
         self.classes = classes
+        self.build_network()
     
 
     def main_path_block(self, x, filters, kernel_size, padding, conv_name, bn_name, batch_norm = True, activation = None, strides = (1, 1)):
@@ -190,3 +191,56 @@ class Resnet18:
         x = Add()([x, x_shortcut])
 
         return x
+    
+
+    def build_network(self):
+
+        input_placeholder = Input(shape = self.input_shape)
+
+        # Stage 1
+        x = self.main_path_block(
+            input_placeholder,
+            64, (7, 7), 'same',
+            'conv1', 'bn_conv1',
+            activation = 'relu',
+            strides = (2, 2)
+        )
+        x = MaxPooling2D((3, 3), strides = (2, 2), padding = 'same')(x)
+
+        # Stage 2
+        x = self.identity_block(x, 64, 'relu', 2, 'a', False)
+        x = self.identity_block(x, 64, 'relu', 2, 'b')
+
+        # Stage 3
+        x = self.convolutional_block(x, [128, 128, 128], 3, 'a')
+        x = self.identity_block(x, 128, 'relu', 3, 'b')
+
+        # Stage 4
+        x = self.convolutional_block(x, [256, 256, 256], 4, 'a')
+        x = self.identity_block(x, 256, 'relu', 4, 'b')
+
+        # Stage 5
+        x = self.convolutional_block(x, [512, 512, 512], 5, 'a')
+        x = self.identity_block(x, 512, 'relu', 4, 'b')
+
+        # Fully Connected Layers
+        x = BatchNormalization(axis = 3)(x)
+        x = Activation('relu')(x)
+        x = AveragePooling2D((2, 1), padding = 'valid', strides = (2, 2))(x)
+        x = Flatten()(x)
+        x = Dense(512)
+        x = Dense(
+            self.classes,
+            activation = 'softmax',
+            name = 'fc_' + str(self.classes),
+            kernel_initializer = glorot_uniform(seed = 0)
+        )(x)
+
+        self.model = Model(input_placeholder, x, name = 'Resnet18')
+    
+
+    def summary(self):
+        """
+        Print the Model Summary
+        """
+        self.model.summary()
