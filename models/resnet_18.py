@@ -194,6 +194,9 @@ class Resnet18:
     
 
     def build_network(self):
+        """
+        Implementation of the Resnet18 Architecture
+        """
 
         input_placeholder = Input(shape = self.input_shape)
 
