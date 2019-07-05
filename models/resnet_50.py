@@ -1,5 +1,5 @@
-from tensorflow.keras.layers import Conv2D, BatchNormalization, Activation, Add
-from tensorflow.keras.layers import Input, ZeroPadding2D, MaxPooling2D
+from tensorflow.keras.layers import Conv2D, BatchNormalization, Activation
+from tensorflow.keras.layers import Input, ZeroPadding2D, MaxPooling2D, Add
 from tensorflow.keras.layers import AveragePooling2D, Flatten, Dense
 from tensorflow.keras.models import Model
 from tensorflow.keras.initializers import glorot_uniform
@@ -124,7 +124,7 @@ class Resnet50:
 
     def convolutional_block(self, input_tensor, middle_filter_size, filters, stage, block, stride = 2):
         """
-        Implementation of Identity Block
+        Implementation of Convolutional Block
 
         Arguments:
         input_tensor ->         tensor;         Input Tensor (n, h, w, c)
