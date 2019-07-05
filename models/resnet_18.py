@@ -61,13 +61,13 @@ class Resnet18:
 
 
 
-    def identity_block(self, input_tensor, filters, activations, stage, block, start_with_batch_norm = True):
+    def identity_block(self, input_tensor, filters, activation, stage, block, start_with_batch_norm = True):
         """
         Implementation of Identity Block
 
         Arguments:
         input_tensor ->         tensor;         Input Tensor (n, h, w, c)
-        filters ->              integer list;   Number of filters in the convolutional blocks
+        filters ->              integer;        Number of filters in the convolutional blocks
         activations ->          string list;    List of Activations
         stage ->                integer;        Denotes position of the block in the network
         block ->                string;         Denotes name of the block
@@ -86,10 +86,9 @@ class Resnet18:
 
         if start_with_batch_norm:
             # Start with Batch Normalization
-            x = BatchNormalization(axis = 3, name = batch_norm_name_base + '_1')(x)
+            x = BatchNormalization(axis = 3, name = batch_norm_name_base + '_1')(input_tensor)
 
-            if activations[0] != None:
-                x = Activation(activations[0])(x)
+            x = Activation(activation)(x)
         
         else:
             x = input_tensor
@@ -97,17 +96,17 @@ class Resnet18:
         # Main Path Block a
         x = self.main_path_block(
             x,
-            filters[0],
+            filters,
             (3, 3),
             'same',
             conv_name_base + '2a',
             batch_norm_name_base + '2a',
-            activation = 'relu'
+            activation = activation
         )
 
         # Main Path Block b
         x = self.main_path_block(
-            x, filters[1],
+            x, filters,
             (3, 3), 'same',
             conv_name_base + '2b',
             batch_norm_name_base + '2b',
@@ -121,7 +120,7 @@ class Resnet18:
         return x
     
 
-    def convolutional_block(self, input_tensor, filters, stage, block, start_with_batch_norm = True):
+    def convolutional_block(self, input_tensor, filters, activation, stage, block, start_with_batch_norm = True):
         """
         Implementation of Convolutional Block
 
@@ -147,10 +146,9 @@ class Resnet18:
 
         if start_with_batch_norm:
             # Start with Batch Normalization
-            x = BatchNormalization(name = batch_norm_name_base + '_1')(x)
+            x = BatchNormalization(name = batch_norm_name_base + '_1')(input_tensor)
 
-            if activations[0] != None:
-                x = Activation(activations[0])(x)
+            x = Activation(activation)(x)
         
         else:
             x = input_tensor
@@ -161,7 +159,7 @@ class Resnet18:
             (3, 3), 'same',
             conv_name_base + '2a',
             batch_norm_name_base + '2a',
-            activation = 'relu',
+            activation = activation,
             strides = (2, 2)
         )
 
@@ -215,15 +213,15 @@ class Resnet18:
         x = self.identity_block(x, 64, 'relu', 2, 'b')
 
         # Stage 3
-        x = self.convolutional_block(x, [128, 128, 128], 3, 'a')
+        x = self.convolutional_block(x, [128, 128, 128], 'relu', 3, 'a')
         x = self.identity_block(x, 128, 'relu', 3, 'b')
 
         # Stage 4
-        x = self.convolutional_block(x, [256, 256, 256], 4, 'a')
+        x = self.convolutional_block(x, [256, 256, 256], 'relu', 4, 'a')
         x = self.identity_block(x, 256, 'relu', 4, 'b')
 
         # Stage 5
-        x = self.convolutional_block(x, [512, 512, 512], 5, 'a')
+        x = self.convolutional_block(x, [512, 512, 512], 'relu', 5, 'a')
         x = self.identity_block(x, 512, 'relu', 4, 'b')
 
         # Fully Connected Layers
@@ -233,8 +231,7 @@ class Resnet18:
         x = Flatten()(x)
         x = Dense(512)
         x = Dense(
-            self.classes,
-            activation = 'softmax',
+            self.classes, activation = 'softmax',
             name = 'fc_' + str(self.classes),
             kernel_initializer = glorot_uniform(seed = 0)
         )(x)
